@@ -1,0 +1,171 @@
+{{extend 'index.html'}}
+
+
+
+<h1>Movimientos de caja</h1>
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <i class="fa fa-bar-chart-o fa-fw"></i> Formulario
+        <div class="pull-right">
+            <div class="btn-group">
+                <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                    Actions
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu pull-right" role="menu">  
+                	
+                      <li><a href="{{=url}}">Imprimir</a> </li>
+                      <li><a href="{{=URL('control_caja','cierre')}}">Ir a cierre de caja</a> </li>
+
+                      <input type="hidden" id="printid">
+                                        
+                </ul>
+            </div>
+        </div>
+    </div>                        
+     <!-- /.panel-heading -->
+    <div class="panel-body">        
+        
+        	{{=form}}
+             <div class="alert alert-success alert-dismissable" style="display:none" id="notify-success">                        
+             </div> 
+             <div class="alert alert-warning alert-dismissable" style="display:none" id="notify-warning">
+             </div> 
+            <div class="alert alert-danger alert-dismissable" style="display:none" id="notify-danger">                         
+             </div> 
+            
+                        
+            
+             {{if exito==1:}}               
+               <script>
+               $('#notify-success').html("{{=msg}}" );
+               $('#notify-success').show();            
+               $('#notify-success').delay(3000).fadeOut('slow');
+               </script>             
+             {{elif exito==0:}}
+               <script>
+               $('#notify-danger').html("{{=msg}}" );
+               $('#notify-danger').show();            
+               $('#notify-danger').delay(3000).fadeOut('slow');
+               </script>
+
+            {{pass}}            
+    <!-- /.panel-body -->
+    </div>
+  </div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <i class="fa fa-bar-chart-o fa-fw"></i> Detalle
+        <div class="pull-right">
+            <div class="btn-group">
+                <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                    Actions
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu pull-right" role="menu">                      
+                     <li><a id="eliminar" href="#" >Eliminar</a> </li>  
+                     <input type="hidden" id="deleteid">                 
+                </ul>
+            </div>
+        </div>
+    </div>                        
+     <!-- /.panel-heading -->
+    <div class="panel-body">        
+        
+            {{=mytabla}}
+             <div class="alert alert-success alert-dismissable" style="display:none" id="notify-success">                        
+             </div> 
+             <div class="alert alert-warning alert-dismissable" style="display:none" id="notify-warning">
+             </div> 
+            <div class="alert alert-danger alert-dismissable" style="display:none" id="notify-danger">                         
+             </div> 
+            
+                        
+            
+             {{if exito>1:}}               
+               <script>
+               $('#notify-success').html("{{=msg}}" );
+               $('#notify-success').show();            
+               $('#notify-success').delay(3000).fadeOut('slow');
+               </script>             
+             {{elif exito==0:}}
+               <script>
+               $('#notify-danger').html("{{=msg}}" );
+               $('#notify-danger').show();            
+               $('#notify-danger').delay(3000).fadeOut('slow');
+               </script>
+
+            {{pass}}            
+    <!-- /.panel-body -->
+    </div>
+  </div>
+
+
+   
+<script type="text/javascript">
+
+$(document).ready(function() {
+    var table = $('#mitabla').DataTable();
+
+
+    $('#mitabla tbody').on( 'click', 'tr', function () {
+    	   
+    	var elid = $('td', this).eq(0).text();
+        //alert( 'You clicked on '+elid+'\'s row' );
+        $('#deleteid').val(elid);
+        ///categoria/handle/?id="+$(#printid).html()
+        //$('#eliminar').href="{{=URL('mov_caja','eliminar')}}/elid";
+
+        if ( $(this).hasClass('selected') ) {
+            $(this).removeClass('selected');                       
+            $(this).css({'color': 'black'}); 
+        }
+        else {
+        	table.$('tr.selected').css({'color': 'black'}); 
+            table.$('tr.selected').removeClass('selected');            
+            $(this).addClass('selected');            
+            $(this).css({'color': 'blue'});          
+        }
+    } );
+
+
+    $('#editar').click( function () {        
+        //alert($('#printid').val());        
+        var url="{{=URL('categoria','handle')}}"
+        var elid=$('#printid').val();
+        if (elid==""){
+            //alert("Debe seleccionar un registro para continuar!")
+            $('#notify-danger').html("Debe seleccionar un registro para continuar!" );
+            $('#notify-danger').show();            
+            $('#notify-danger').delay(3000).fadeOut('slow');
+        }else{
+            $(location).attr('href',url+"/"+elid);    
+        }
+        
+     } );
+
+    $('#eliminar').click( function () {        
+        //alert($('#printid').val());        
+        var url="{{=URL('mov_caja','eliminar')}}"
+        var elid=$('#deleteid').val();
+        if (elid==""){
+            //alert("Debe seleccionar un registro para continuar!")
+            $('#notify-danger').html("Debe seleccionar un registro para continuar!" );
+            $('#notify-danger').show();            
+            $('#notify-danger').delay(3000).fadeOut('slow');
+        }else{
+            $(location).attr('href',url+"/"+elid);    
+        }
+        
+     } );
+
+
+
+
+} );
+
+
+
+
+</script>

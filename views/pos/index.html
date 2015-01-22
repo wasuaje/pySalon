@@ -1,0 +1,572 @@
+{{extend 'pos.html'}}
+
+
+<h3>Punto de Venta</h3>
+<div class="col-lg-5">    
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <i class="fa fa-bar-chart-o fa-fw"></i> Ticket
+        <div class="pull-right">
+            <div class="btn-group">
+                <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                    Actions
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu pull-right" role="menu">  
+                	    <li><a href="{{=URL('pos','index')}}">Nuevo Ticket</a> </li>                                            
+                      <li><a id="borrar" href="#">Borrar Ticket</a> </li>                                            
+                      <li><a id="eliminar" href="#" >Eliminar Linea</a> </li>
+                      <li><a id="imprime" href="#">Imprimir</a> </li>
+
+                      <input type="hidden" id="printid">
+                      <input type="hidden" id="cobid">
+                                        
+                </ul>
+            </div>
+        </div>
+    </div>                        
+     <!-- /.panel-heading -->
+    <div class="panel-body" style="height:700px">        
+    <!--<button data-target='#myModalC' data-toggle='modal' class='btn btn-outline btn-success' type='button'>Cliente</button>
+    <button data-target='#myModalP' data-toggle='modal' class='btn btn-outline btn-warning' type='button'>Especialista</button>-->    
+          <table>
+          <tr>
+          <td>Cliente: </td><td>{{=fld_cliente}}</td>
+          <td>
+          <button data-target='#myModalC' data-toggle='modal' class='btn btn-outline btn-success btn-xs' type='button'>Nuevo</button>
+          <input type="hidden" id="new_client_id">
+          </td>
+          </tr>
+          <tr>
+          <td>Especialista: </td><td>{{=fld_persona}}</td> 
+          </tr>
+          </table>
+          <h4>Ticket: <span id="divfact_id"></span></h4>
+          <div id="table">
+        	{{=mytabla}}
+          </div>
+             
+            
+    <!-- /.panel-body -->
+    </div>
+  </div>
+</div>
+
+<div id="myModal" class="modal fade" aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="50" style="display: none; height:300px; width:400px; position:absolute; overflow-y:auto; overflow-x:auto; top:200px; left:300px;">
+ <div class="modal-dialogue">
+  <div class="modal-content">
+    <div class="modal-header">
+      <button class="close" aria-hidden="true" data-dismiss="modal" type="button">×</button>
+        <h4 id="myModalLabel" class="modal-title">Monto a cobrar</h4>
+    </div>
+     <div class="modal-body">
+      <b>Refer: </b><input id="ref" class="string" type="text" value="ss" name="ref">
+      <p></p><b>Descr: </b><input id="desc" class="string" type="text" value="" name="desc">
+      <p></p><b>Monto: </b><input id="monto_cobro" class="string" type="text" value="0.00" name="Cobro">
+      <input id="fp_id"  type="hidden" value="0" name="fp_id">
+      <input id="fact_id"  type="hidden" value="0" name="fact_id">
+
+      </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal" type="button">Cerrar</button>
+      <button class="btn btn-primary" data-dismiss="modal" onclick="add_cobro()" type="button">Agregar</button>
+    </div>
+  </div>
+ </div>
+</div>
+
+<div id="myModalC" class="modal fade" aria-hidden="true" aria-labelledby="myModalLabelC" role="dialog" tabindex="50" style="display: none; height:300px; width:400px; position:absolute; overflow-y:auto; overflow-x:auto; top:200px; left:300px;">
+ <div class="modal-dialogue">
+  <div class="modal-content">
+    <div class="modal-header">
+      <button class="close" aria-hidden="true" data-dismiss="modal" type="button">×</button>
+        <h4 id="myModalLabelC" class="modal-title">Agregue cliente</h4>
+    </div>
+     <div class="modal-body">
+      {{=form_cliente}}      
+      </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal" type="button">Cerrar</button>
+      <button class="btn btn-primary" data-dismiss="modal" onclick="add_cliente()" type="button">Agregar</button>
+    </div>
+  </div>
+ </div>
+</div>
+
+<div id="myModalP" class="modal fade" aria-hidden="true" aria-labelledby="myModalLabelP" role="dialog" tabindex="50" style="display: none; height:300px; width:400px; position:absolute; overflow-y:auto; overflow-x:auto; top:200px; left:300px;">
+ <div class="modal-dialogue">
+  <div class="modal-content">
+    <div class="modal-header">
+      <button class="close" aria-hidden="true" data-dismiss="modal" type="button">×</button>
+        <h4 id="myModalLabelP" class="modal-title">Seleccione Especialista</h4>
+    </div>
+     <div class="modal-body">
+      {{=fld_persona}}
+      </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal" type="button">Cerrar</button>
+      <button class="btn btn-primary" data-dismiss="modal" onclick="add_cobro()" type="button">Agregar</button>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+<div class="col-lg-6">    
+ <div class="panel panel-default">    
+  <div class="panel-heading"> 
+  Categorias
+  </div>
+  <div class="panel-body" style="height:150px">    
+    {{=categorias}}
+  </div>  
+ </div>
+</div>
+
+<div class="col-lg-6">    
+ <div class="panel panel-default">    
+  <div class="panel-heading" > 
+  Productos
+  </div>
+  <div class="panel-body" id="productos" style="height:150  px">    
+    
+  </div>  
+ </div>
+</div>
+
+<div class="col-lg-6">    
+ <div class="panel panel-default">    
+  <div class="panel-heading" > 
+  Cobrar
+  </div>
+  <div class="panel-body" id="productos" style="height:150  px">    
+    {{=tipos_pago}}
+       <div id="table2">          
+      </div>    
+  </div>  
+ </div>
+
+            <div class="alert alert-success alert-dismissable" style="display:none" id="notify-success">                        
+             </div> 
+             <div class="alert alert-warning alert-dismissable" style="display:none" id="notify-warning">
+             </div> 
+            <div class="alert alert-danger alert-dismissable" style="display:none" id="notify-danger">                         
+             </div>             
+                         
+</div>
+
+
+
+
+
+
+
+   
+<script type="text/javascript">
+
+
+
+$(document).ready(function() {
+
+  //POSTERIORMENTE COLOCAR ESTE INIT DE LA TABLA EN UNA FUNCION
+  //Y LLAMAR LA FUNCION DESPUES DE QUE EL CONTROLLER MEDIANTE AJAX
+  //REGRESE EL OBJETO HTML  #MITABLA PARA TRANFORMARLA
+    
+    config_datatable();
+  
+} )
+
+
+
+function get_productos(obj){
+    var elid=obj;    
+    var url="{{=URL('pos','get_productos')}}"
+    if (elid==""){
+            //alert("Debe seleccionar un registro para continuar!")
+            $('#notify-danger').html("Ha ocurrido un error !" );
+            $('#notify-danger').show();            
+            $('#notify-danger').delay(3000).fadeOut('slow');
+        }else{
+            //$(location).attr('href',url+"/"+elid);
+            //alert(elid);
+            $.ajax( { url:url,data:{id:elid} } )
+            .done(function(data) {
+              $('#productos').html(data);
+            //alert( "success" );
+            })
+            .fail(function() {
+              $('#notify-danger').html("Ha ocurrido un error !" );
+              $('#notify-danger').show();            
+              $('#notify-danger').delay(3000).fadeOut('slow');
+            })
+            .always(function() {
+            //alert( "complete" );
+            });
+        }
+
+   }
+//usado para setaer un field hidden con el tipo de pago seleccionado on click
+function set_fp(obj){
+  var elid=obj.replace("fp_", "");
+  var desc=$("#"+obj).text();
+  //console.log($("#"+elid).html());
+  $('#fp_id').val(elid);
+  $('#desc').val("Cobro en: "+desc+" de factura: "+$('#fact_id').val() );
+}
+
+//usado para agreagar el cobro en si con el monto ingresado la formapago
+// DEBE ESTAR SETAEDA EN ID FACTURA SINO NO PUEDE COBRAR
+function add_cobro(){
+    var id_fp=$('#fp_id').val();
+    var monto_cobro=$('#monto_cobro').val();    
+    var factid = $('#fact_id').val() ; 
+    var ref=$('#ref').val();    
+    var desc = $('#desc').val() ; 
+    //Valores de clientes y personas
+    //console.log($('#sel-clientes').val());
+    //console.log($('#sel-personas').val());
+
+
+    //console.log(id_fp,monto_cobro);
+    var url="{{=URL('pos','add_cobro')}}"
+    if (id_fp=="" || factid==0){
+            //alert("Debe seleccionar un registro para continuar!")
+            $('#notify-danger').html("Seleccione su forma de pago y agregue items al ticket antes de cobrar" );
+            $('#notify-danger').show();            
+            $('#notify-danger').delay(3000).fadeOut('slow');
+        }else{
+            //$(location).attr('href',url+"/"+elid);
+            //alert(elid);
+            $.ajax( { url:url,data:{id_fp:id_fp,monto_cobro:monto_cobro,fact_id:factid,ref:ref,desc:desc}, dataType:'json' } )
+            .done(function(data) {
+                //console.log(data["tabla"]);              
+              $('#table').html(data["tabla"]) ;
+              config_datatable();
+              $('#table2').html(data["tabla2"]) ;
+              config_datatable2();
+              //ahora reconfiguro el datatable con la data recibida
+              
+              
+              
+            //alert( "success" );
+            })
+            .fail(function() {
+              $('#notify-danger').html("Ha ocurrido un error !" );
+              $('#notify-danger').show();            
+              $('#notify-danger').delay(3000).fadeOut('slow');
+            })
+            .always(function() {
+            //alert( "complete" );
+            });
+        }
+
+   }
+
+function del_cobro(){
+
+        var url="{{=URL('pos','del_cobro')}}";
+        var elid=$('#cobid').val();
+        var fact_id = $('#fact_id').val();
+        if (elid==""){
+            //alert("Debe seleccionar un registro para continuar!")
+            $('#notify-danger').html("Debe seleccionar un cobro!" );
+            $('#notify-danger').show();            
+            $('#notify-danger').delay(3000).fadeOut('slow');
+        }else{
+            $.ajax( { url:url,data:{det_id:elid,fact_id:fact_id},dataType:'json' } )
+            .done(function(data) {              
+              if (data){
+              //si agrega bien devuelvo en 0 el fact_id y el datatable
+              $('#table').html(data["tabla"]) ;
+              config_datatable();
+              $('#table2').html(data["tabla2"]) ;
+              config_datatable2();
+              //ahora reconfiguro el datatable con la data recibida
+
+              }
+            //alert( "success" );
+            })
+            .fail(function() {
+              $('#notify-danger').html("Ha ocurrido un error eliminando el cobro!" );
+              $('#notify-danger').show();            
+              $('#notify-danger').delay(3000).fadeOut('slow');
+            })
+            .always(function(data) {
+              //console.log(data);
+            //alert( "complete" );
+            });
+        } 
+
+
+}
+
+function add_cliente(){
+    var rif = $('#rif').val();
+    var nom = $('#nom_cliente').val();
+    var juri= $('#juridico').val();
+    var url="{{=URL('cliente','quick_add')}}"
+    //asi agrego lo nuevo al combobox jejeje
+    //$("<option value='5'>Scientific Linux</option>").appendTo("#month");
+    if ( rif == "" || nom == "" || juri=="" ){
+            
+            $('#notify-danger').html("Ha ocurrido un error !" );
+            $('#notify-danger').show();            
+            $('#notify-danger').delay(3000).fadeOut('slow');      
+    
+    }else{
+
+      $.ajax( { url:url,data:{rif:rif,nom:nom,juri:juri} } )
+            .done(function(data) {              
+              if (data>0){
+                //agrego el nuevo cliente al drop box
+                $("<option value="+data+">"+nom+"</option>").appendTo("#sel-clientes");
+                //lo selecciono
+                $('#sel-clientes').val(data);
+                //$('#sel-clientes option[value='+data+']')
+              }
+            //alert( "success" );
+            })
+            .fail(function() {
+              $('#notify-danger').html("Ha ocurrido un error agregando el cliente !" );
+              $('#notify-danger').show();            
+              $('#notify-danger').delay(3000).fadeOut('slow');
+            })
+            .always(function() {
+            //alert( "complete" );
+            });
+      }    
+   }
+
+function fact_prod(prodid){
+    var prodid  = prodid;
+    var clteid  = $('#sel-clientes').val();
+    var perid   = $('#sel-personas').val();
+    var fact_id = $('#fact_id').val();
+    var url="{{=URL('pos','fact_prod')}}"
+
+    if ( prodid == "" || clteid == "" || perid=="" ){
+            
+            $('#notify-danger').html("Ha ocurrido un error !" );
+            $('#notify-danger').show();            
+            $('#notify-danger').delay(3000).fadeOut('slow');      
+    
+    }else{
+
+      $.ajax( { url:url,data:{prodid:prodid,clteid:clteid,perid:perid,fact_id:fact_id}, dataType:'json' } )
+            .done(function(data) {              
+              if (data){
+              //si agrega bien devuelvo en 0 el fact_id y el datatable
+              //console.log(data);
+              $('#fact_id').val(data['fact_id']) ;
+              $('#divfact_id').html(data['fact_id']) ;
+              $('#table').html(data['tabla']) ;
+
+              //ahora reconfiguro el datatable con la data recibida
+              config_datatable();
+
+              }
+            //alert( "success" );
+            })
+            .fail(function() {
+              $('#notify-danger').html("Ha ocurrido un error agregando la linea !" );
+              $('#notify-danger').show();            
+              $('#notify-danger').delay(3000).fadeOut('slow');
+            })
+            .always(function(data) {
+              //console.log(data);
+            //alert( "complete" );
+            });
+      }     
+
+}
+
+$('#eliminar').click( function () {        
+        //alert($('#printid').val());        
+        var url="{{=URL('pos','det_del')}}"
+        var elid=$('#printid').val();
+        if (elid==""){
+            //alert("Debe seleccionar un registro para continuar!")
+            $('#notify-danger').html("Debe seleccionar un registro para continuar!" );
+            $('#notify-danger').show();            
+            $('#notify-danger').delay(3000).fadeOut('slow');
+        }else{
+
+            $.ajax( { url:url,data:{det_id:elid} } )
+            .done(function(data) {              
+              if (data){
+              //si agrega bien devuelvo en 0 el fact_id y el datatable
+              //console.log(data);
+              
+              $('#table').html(data) ;
+
+              //ahora reconfiguro el datatable con la data recibida
+              config_datatable();
+
+              }
+            //alert( "success" );
+            })
+            .fail(function() {
+              $('#notify-danger').html("Ha ocurrido un error eliminando la linea !" );
+              $('#notify-danger').show();            
+              $('#notify-danger').delay(3000).fadeOut('slow');
+            })
+            .always(function(data) {
+              //console.log(data);
+            //alert( "complete" );
+            });
+        }        
+     } );
+
+$('#borrar').click( function () {        
+        //alert($('#printid').val());        
+        var url="{{=URL('pos','fact_del')}}"
+        var elid=$('#fact_id').val();
+        if (elid==""){
+            //alert("Debe seleccionar un registro para continuar!")
+            $('#notify-danger').html("Debe haber un ticket creado y cargado!" );
+            $('#notify-danger').show();            
+            $('#notify-danger').delay(3000).fadeOut('slow');
+        }else{
+
+            $.ajax( { url:url,data:{fact_id:elid} } )
+            .done(function(data) {              
+              if (data){
+              //si agrega bien devuelvo en 0 el fact_id y el datatable
+              //console.log(data);
+              $('#fact_id').val(0) ;
+              $('#divfact_id').html("") ;
+              $('#table').html(data) ;
+
+              //ahora reconfiguro el datatable con la data recibida
+              config_datatable();
+
+              }
+            //alert( "success" );
+            })
+            .fail(function() {
+              $('#notify-danger').html("Ha ocurrido un error eliminando la factura !" );
+              $('#notify-danger').show();            
+              $('#notify-danger').delay(3000).fadeOut('slow');
+            })
+            .always(function(data) {
+              //console.log(data);
+            //alert( "complete" );
+            });
+        }        
+     } );
+
+
+$('#imprime').click( function () {        
+        //alert($('#printid').val());        
+        var url="{{=URL('pos','fact_print')}}"
+        var elid=$('#fact_id').val();
+        if (elid==""){
+            //alert("Debe seleccionar un registro para continuar!")
+            $('#notify-danger').html("Debe haber un ticket creado y cargado!" );
+            $('#notify-danger').show();            
+            $('#notify-danger').delay(3000).fadeOut('slow');
+        }else{
+
+            $.ajax( { url:url,data:{fact_id:elid} } )
+            .done(function(data) {              
+              if (data){
+              //si agrega bien devuelvo en 0 el fact_id y el datatable
+              //console.log(data);   
+              var url2="{{=URL('static','ticket.txt')}}"
+              var myWindow=window.open('','','width=200,height=200');
+              //var myWindow=window.open(url2,"Impresion","status=0,toolbar=0,width=200,height=100")
+              myWindow.document.write(data);
+              //myWindow.document.close();              
+              //myWindow.blur();
+              //myWindow.focus();
+              //setTimeout(function(){myWindow.print();}, 2000);
+              //setTimeout(function(){myWindow.close();}, 2000);              
+              //window.onload=function(myWindow){ myWindow.print();}
+              myWindow.print();              
+              myWindow.close();              
+              //w=window.open(url2,"Impresion","status=0,toolbar=0");
+              //w = window.open("'"+url+"'");
+              //w.print();
+
+              }
+            //alert( "success" );
+            })
+            .fail(function() {
+              $('#notify-danger').html("Ha ocurrido un error !" );
+              $('#notify-danger').show();            
+              $('#notify-danger').delay(3000).fadeOut('slow');
+            })
+            .always(function(data) {
+              //console.log(data);
+            //alert( "complete" );
+            });
+        }        
+     } );
+
+
+
+function config_datatable(){
+
+var table = $('#mitabla').DataTable( {
+                                            "paging":   false,
+                                            "ordering": false,
+                                            "searching": false,
+                                            "info":     false                                            
+                                        });
+
+
+    $('#mitabla tbody').on( 'click', 'tr', function () {
+         
+      var elid = $('td', this).eq(0).text();
+        //alert( 'You clicked on '+elid+'\'s row' );
+        $('#printid').val(elid);
+        ///categoria/handle/?id="+$(#printid).html()        
+
+        if ( $(this).hasClass('selected') ) {
+            $(this).removeClass('selected');                       
+            $(this).css({'color': 'black'}); 
+        }
+        else {
+          table.$('tr.selected').css({'color': 'black'}); 
+            table.$('tr.selected').removeClass('selected');            
+            $(this).addClass('selected');            
+            $(this).css({'color': 'blue'});          
+        }
+    } );
+
+}
+
+
+function config_datatable2(){
+
+var table2 = $('#mitabla2').DataTable( {
+                                            "paging":   false,
+                                            "ordering": false,
+                                            "searching": false,
+                                            "info":     false                                            
+                                        });
+
+
+    $('#mitabla2 tbody').on( 'click', 'tr', function () {
+         
+      var elid = $('td', this).eq(0).text();
+        //alert( 'You clicked on '+elid+'\'s row' );
+        $('#cobid').val(elid);
+        ///categoria/handle/?id="+$(#printid).html()        
+
+        if ( $(this).hasClass('selected') ) {
+            $(this).removeClass('selected');                       
+            $(this).css({'color': 'black'}); 
+        }
+        else {
+          table2.$('tr.selected').css({'color': 'black'}); 
+            table2.$('tr.selected').removeClass('selected');            
+            $(this).addClass('selected');            
+            $(this).css({'color': 'blue'});          
+        }
+    } );
+
+}
+
+
+</script>

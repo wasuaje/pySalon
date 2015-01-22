@@ -1,0 +1,307 @@
+(dp1
+S'output'
+p2
+S"<type 'exceptions.SyntaxError'> invalid syntax (pos.py, line 251)"
+p3
+sS'layer'
+p4
+S'/home/wasuaje/Documentos/desarrollo/web2py6/applications/pysalon/controllers/pos.py'
+p5
+sS'code'
+p6
+S'# -*- coding: utf-8 -*-\n### required - do no delete\n#import json\nimport math \ntry:\n    import simplejson as json\nexcept (ImportError,):\n    import json\n\ndef user(): return dict(form=auth())\ndef download(): return response.download(request,db)\ndef call(): return service()\n### end requires\n@auth.requires_login()\ndef index():\t\n\t\n\t#\n\t#seleccion de tipos de pago\n\t#\n\trow=db(db.fc_forma_pago.id > 0).select()\n\tlis_fp=[]\n\tfor row in row:\n\t\tlis_fp.append(XML("<button data-target=\'#myModal\' data-toggle=\'modal\' class=\'btn btn-outline btn-default\' onclick=\'set_fp(this.id)\' id=fp_%s type=\'button\'>%s</button>" % (row.id,row.nombre) ) )\t\n\tlis_fp.append(SPAN("                "))\n\tlis_fp.append(XML("<button class=\'btn btn-outline btn-danger btn-xs\' onclick=\'del_cobro();\' type=\'button\'>Elimina</button>"))\n\t#\n\t#Seleccion de categorias de productos para mostrar\n\t#\n\trow=db(db.in_categoria.id > 0).select()\n\tlis_cat=[]\n\tfor row in row:\n\t\t#url=A(row.nombre,_href="#",_onclick="get_productos();")\n\t\tlis_cat.append(XML("<button onclick=\'get_productos(this.id);\' class=\'btn btn-outline btn-default\' id=%s type=\'button\'>%s</button>" % (row.id,row.nombre) ) )\n\n\t \n\t#armo los selects para eleccion de clientes y especialistas\n\tfld_cliente=SELECT(_id=\'sel-clientes\',*[OPTION(s.nombre, _value=s.id) for s in db(db.cf_cliente).select()])\n\tfld_persona=SELECT(_id=\'sel-personas\',*[OPTION(s.nombres+\', \'+s.apellidos, _value=s.id) for s in db(db.cf_persona).select()])\n\t\n\t#form para agregar rapidamente clientes nuevos escondidos en un modal\n\tform_cliente=TABLE(TR("RIF.",INPUT(_id=\'rif\', type="text")),\n\t\t\t\t\t\tTR("Nombre:",INPUT(_id=\'nom_cliente\', type="text")),\n\t\t\t\t\t\tTR("Juridico", SELECT(OPTION(\'S\',_value=1),OPTION(\'N\',_value=0),_id=\'juridico\')),\n\t\t\t\t\t\t)\n\n\tprueba="""\n\t<table id="mitabla2" style=".selected{color:red;}" class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">\n        <thead>\n            <tr>\n            \t<th>Id</th>\n                <th>Producto</th>\n                <th>Importe</th>                \n            </tr>\n        </thead>         \n        <tbody>\n        </tbody>\n        </table>\n        """\n\n\tmytabla=XML(prueba)\n\n\n\treturn dict(mytabla=mytabla,categorias=DIV(lis_cat),tipos_pago=DIV(lis_fp),fld_cliente=fld_cliente,fld_persona=fld_persona,form_cliente=form_cliente)\n\n\ndef get_productos():\t\n\tid=request.vars.id\n\ttabla=\'in_producto\'\t\n\trow=db(db[tabla].categoria_id == id).select()\n\tlis_cat=[]\n\tfor row in row:\n\t\t#url=A(row.nombre,_href="#",_onclick="get_productos();")\n\t\tlis_cat.append(XML("<button onclick=\'fact_prod(this.id);\' class=\'btn btn-outline btn-default\' id=%s type=\'button\'>%s</button>" % (row.id,row.nombre) ) )\n\n\treturn DIV(lis_cat)\n\n\ndef get_fact_lines(fact_id):\t\t\n\texito=request.vars.exito\t\n\timporte=0.00\n\tiva=settings.impuesto\n\tmto_iva=0.00\t\n\ttotal=0.00\n\tlista=[]\n\t#Busco lo cobrado pra la factura\t\n\tsum = db.fc_cobro_det.monto.sum()\n\tcobrado=db(db.fc_cobro_det.factura_id==fact_id).select(sum).first()[sum]\t\n\tif cobrado==None:\n\t\tcobrado=0.00\n\n\tprueba="""\n\t<table id="mitabla" style=".selected{color:red;}" class="table" cellspacing="0" width="100%">\n        <thead>\n            <tr>\n            \t<th>Id</th>                \n                <th>Nombre</th>                \n                <th>Importe</th>                \n            </tr>\n        </thead>\n        <tfoot>\n            <tr>\n            \t<th></th>\n                <th>Importe</th>\n                <th>_IMP_</th>                \n            </tr>\n            <tr>\n            \t<th></th>\n                <th>Impuesto _IVA_% </th>\n                <th>_MTOIVA_</th>                \n            </tr>\n            <tr>\n            \t<th></th>\n                <th>Cobrado</th>\n                <th>_COB_</th>                \n            </tr>\n            <tr>\n            \t<th></th>\n                <th>Total</th>\n                <th>_TOT_</th>                \n            </tr>\n        </tfoot>\n \n        <tbody>\n        """\n\trow=db( (db.fc_factura_det.factura_id==fact_id) & (db.fc_factura_det.producto_id == db.in_producto.id) ).select()\n\tfor r in row:\n\t\timporte+=r.fc_factura_det.importe\n\t\tlista.append("<tr><td>"+str(r.fc_factura_det.id)+"</td><td>"+r.in_producto.nombre+"</td><td>"+str(r.fc_factura_det.importe)+"</td></tr>")\n\n\tmto_iva=importe*(iva/100)\n\ttotal=importe+mto_iva-cobrado\n\tprueba=prueba.replace(\'_COB_\',str(cobrado))\n\tprueba=prueba.replace(\'_MTOIVA_\',str(mto_iva))\n\tprueba=prueba.replace(\'_TOT_\',str(total))\n\tprueba=prueba.replace(\'_IVA_\',str(iva))\n\tprueba=prueba.replace(\'_IMP_\',str(importe))\n\n\n   \t#lista=["<tr><td>"+str(r.fc_factura_det.id)+"</td><td>"+r.in_producto.nombre+"</td><td>"+str(r.fc_factura_det.importe)+"</td></tr>" for row in row] \n\tprueba+="".join(lista)\n\tprueba+="</tbody></table>"\n\n\n\tif len(prueba)>0:\n\t\tmytabla=prueba\n\telse:\t\t\n\t\tmytabla=T("No existen registros")\n\t\n\treturn mytabla\n\ndef get_cb_lines(fact_id):\n\texito=request.vars.exito\t\n\tmonto=0.00\n\ttotal=0.00\n\tlista=[]\t\n\n\tprueba="""\n\t<table id="mitabla2" style=".selected{color:red;}" class="table" cellspacing="0" width="100%">\n        <thead>\n            <tr>\n            \t<th>Id</th>                \n                <th>Tipo</th>                \n                <th>Desc</th>                \n                <th>Monto</th>                \n            </tr>\n        </thead>\n        <tfoot>            \n        </tfoot>\n \n        <tbody>\n        """\n\trow=db( (db.fc_cobro_det.factura_id==fact_id) & (db.fc_cobro_det.forma_pago_id == db.fc_forma_pago.id) ).select()\n\tfor r in row:\n\t\tmonto+=r.fc_cobro_det.monto\n\t\tlista.append("<tr><td>"+str(r.fc_cobro_det.id)+"</td><td>"+ \n\t\t\t\t\tr.fc_forma_pago.nombre+"</td><td>"+r.fc_cobro_det.descripcion+\n\t\t\t\t\t"</td><td>"+str(r.fc_cobro_det.monto)+"</td></tr>")\n\n\t\n\ttotal=monto\t\n   \t\n\tprueba+="".join(lista)\n\tprueba+="</tbody></table>"\n\n\n\tif len(prueba)>0:\n\t\tmytabla=prueba\n\telse:\t\t\n\t\tmytabla=T("No existen registros")\n\t\n\treturn mytabla\n\n\ndef fact_prod():\n\tprodid = request.vars.prodid\n\tclteid = request.vars.clteid\n\tperid  = request.vars.perid\t\n\tfact_id = int(request.vars.fact_id)\n\t#si ya viene el numero de factura, es decir estoy insertando solo detalle \n\tif fact_id > 0:\t\t\n\t\tfacid=fact_id\n\t\tins=Factura()\n\t\tins.insertar_det(facid,prodid,perid)\n\telse:\t\t#ahora si no viene el numero de factura es un full isnserta fact y det\t\t\t\t\n\t\tins=Factura()\n\t\tfacid=ins.insertar_fact("Factura de venta","",0.00,0.00,clteid,perid,prodid)\n\n\t#obtnego la tabla con los datos actualizados\n\t#print facid\n\ttabla=get_fact_lines(facid)\n\treturn json.dumps({\'fact_id\':facid,\'tabla\':tabla})\n\ndef fact_del():\n\tfacid=request.vars.fact_id\n\tdele=Factura()\n\tfacid=dele.eliminar_fact(facid)\n\ttabla=get_fact_lines(facid)\n\n\treturn XML(tabla)\n\t\ndef det_del():\n\tdet_id=request.vars.det_id\n\trow=db(db.fc_factura_det.id == det_id).select()\n\tfacid=row[0].factura_id\n\n\tdele=Factura()\n\tdetid=dele.eliminar_det(det_id)\n\ttabla=get_fact_lines(facid)\n\n\treturn XML(tabla)\n\ndef fact_print():\n\timport os\n\tfacid=request.vars.fact_id\n\t#p.mono{font-family:"Courier New", Courier, monospace; font-size:8px;}\n\t#<p class="serif">\n\testilo="font-family:\'Courier New\', Courier, monospace; font-size:10px; width:300px; text-align:center;"\n\testilotbl="font-family:\'Courier New\', Courier, monospace; font-size:10px; width:300px;"\n\talgleft="text-align:left;"\n\talgright="text-align:right;"\n\tfc=Factura()\n\thead=fc.get_head(facid)\n\tlin=fc.get_lines(facid)\t\n\n\theadr=[]\n\theadr.append(DIV(head.cf_cliente.nombre))\n\theadr.append(DIV("RIF: %s" % head.cf_cliente.rif))\t\n\theadr.append(DIV(head.cf_cliente.direccion or ""))\t\n\theadr.append(DIV("================================================="))\n\theadr.append(DIV(TABLE(TR("FACTURA#:","","000"+str(head.fc_factura.id),\n\t\t\t\t\t\t  TR("FECHA:","",head.fc_factura.fecha)_style=algright), _style=estilotbl)))\n\t\n\t\n\tbdy=[]\n\n\n\thtml=[]\n\thtml.append(DIV(headr))\n\n\t#file=os.path.join(request.folder,\'static\',\'ticket.txt\')  \n\t#fo=open(file,"w")\n\t#fo.write(fact)\n\t#fo.close()\n\n\treturn DIV(html ,_style=estilo)\n\ndef add_cobro():\n\tfp_id = int(request.vars.id_fp)\n\tmonto_cobro = float(request.vars.monto_cobro)\n\tfact_id = int(request.vars.fact_id)\n\tref= request.vars.ref\n\tdesc= request.vars.desc\n\n\t#print type(fp_id),type(monto_cobro),type(fact_id),type(ref),type(desc),\n\t\n\tcb=Cobro()\n\tval=cb.insert(fp_id,fact_id,monto_cobro,ref,desc)\t\n\tif val:\n\t\ttabla=get_fact_lines(fact_id)\n\t\ttabla2=get_cb_lines(fact_id)\n\n\treturn json.dumps({\'row\':val,\'tabla\':tabla,\'tabla2\':tabla2})\n\ndef del_cobro():\n\tcob_id = int(request.vars.det_id)\n\tfact_id = int(request.vars.fact_id)\n\tcb=Cobro()\n\tval=cb.delete(cob_id)\t\n\tif val:\n\t\ttabla=get_fact_lines(fact_id)\n\t\ttabla2=get_cb_lines(fact_id)\n\n\treturn json.dumps({\'row\':val,\'tabla\':tabla,\'tabla2\':tabla2})\n\n\n\ndef error():\n    return dict()\n\ndef imprimir():\n# Let\'s import the wrapper\n\timport os\n\timport pdf\n\tfrom pdf.theme import colors, DefaultTheme\n\n\t# and define a constant\n\tTABLE_WIDTH = 540 # this you cannot do in rLab which is why I wrote the helper initially\n\n    # then let\'s extend the Default theme. I need more space so I redefine the margins\n    # also I don\'t want tables, etc to break across pages (allowSplitting = False)\n    # see http://www.reportlab.com/docs/reportlab-userguide.pdf\n\tclass MyTheme(DefaultTheme):\n\t\tdoc = {\n            \'leftMargin\': 25,\n            \'rightMargin\': 25,\n            \'topMargin\': 20,\n            \'bottomMargin\': 25,\n            \'allowSplitting\': False\n            }\n            \n    # let\'s create the doc and specify title and author\n\tdoc = pdf.Pdf(\'Categorias de Producto\', \'wuelfhis asuaje\')\n\n    # now we apply our theme\n\tdoc.set_theme(MyTheme)\n\n    # time to add the logo at the top right\n\t#logo_path = os.path.join(request.folder,\'static/images\',\'facebook.png\')   \n\t#doc.add_image(logo_path, 67, 67, pdf.LEFT)\n\tlogo=pdf.Image(os.path.join(request.folder,\'static/images\',\'facebook.png\')   )\n\taddress = pdf.Paragraph("<para align=left> We are please%s </para>" % "Hola",MyTheme.paragraph)\n\tLIST_STYLE = [(\n\t\t\t\'LINEABOVE\', (0,0), (-1,0), 2, colors.grey),\n\t\t\t(\'LINEABOVE\', (0,1), (-1,-1), 0.25, colors.black),\n\t\t\t(\'LINEBELOW\', (0,0), (-1,-1), 2, colors.grey),\n\t\t\t(\'ALIGN\', (0,0), (0,0),\'LEFT\'),\t\t\t\n\t\t\t\n\t\t\t]\n\t\t\t\n\t\n\tdoc.add(pdf.Table([[logo,address,"","","",""]],style=LIST_STYLE ))\n\n    # give me some space\n\tdoc.add_spacer()\n    \n    # this header defaults to H1\n\tdoc.add_header(\'Categorias de producto\')\n\n    # here\'s how to add a paragraph\n\t#doc.add_paragraph("We are pleased to confirm your reservation with ...")\n\tdoc.add_spacer()\t\n\n\t# let\'s move on to the divers table\n\n\tdiver_table = [[\'Id\', \'Codigo\', \'Nombre\']] # this is the header row \n\n\tfor row in db(db.in_categoria.id>0).select() :   \n\t\tdiver_table.append([row.id, row.codigo, row.nombre]) # these are the other rows\n\n\tdoc.add_table(diver_table, TABLE_WIDTH)\n\t\n\tresponse.headers[\'Content-Type\']=\'application/pdf\'\n\t\n\treturn doc.render()\nresponse._vars=response._caller(fact_print)\n'
+p7
+sS'snapshot'
+p8
+(dp9
+S'exception'
+p10
+(dp11
+S'__getslice__'
+p12
+S"<method-wrapper '__getslice__' of exceptions.SyntaxError object>"
+p13
+sS'text'
+p14
+S'\'\\t\\t\\t\\t\\t\\t  TR("FECHA:","",head.fc_factura.fecha)_style=algright), _style=estilotbl)))\\n\''
+p15
+sS'__str__'
+p16
+S"<method-wrapper '__str__' of exceptions.SyntaxError object>"
+p17
+sS'__reduce__'
+p18
+S'<built-in method __reduce__ of exceptions.SyntaxError object>'
+p19
+sS'__dict__'
+p20
+S'{}'
+p21
+sS'__sizeof__'
+p22
+S'<built-in method __sizeof__ of exceptions.SyntaxError object>'
+p23
+sS'__init__'
+p24
+S"<method-wrapper '__init__' of exceptions.SyntaxError object>"
+p25
+sS'__setattr__'
+p26
+S"<method-wrapper '__setattr__' of exceptions.SyntaxError object>"
+p27
+sS'__reduce_ex__'
+p28
+S'<built-in method __reduce_ex__ of exceptions.SyntaxError object>'
+p29
+sS'__new__'
+p30
+S'<built-in method __new__ of type object>'
+p31
+sS'__format__'
+p32
+S'<built-in method __format__ of exceptions.SyntaxError object>'
+p33
+sS'__class__'
+p34
+S"<type 'exceptions.SyntaxError'>"
+p35
+sS'filename'
+p36
+S"'/home/wasuaje/Documentos/desarrollo/web2py6/applications/pysalon/controllers/pos.py'"
+p37
+sS'lineno'
+p38
+S'251'
+p39
+sS'msg'
+p40
+S"'invalid syntax'"
+p41
+sS'__doc__'
+p42
+S"'Invalid syntax.'"
+p43
+sS'__getitem__'
+p44
+S"<method-wrapper '__getitem__' of exceptions.SyntaxError object>"
+p45
+sS'__setstate__'
+p46
+S'<built-in method __setstate__ of exceptions.SyntaxError object>'
+p47
+sS'__getattribute__'
+p48
+S"<method-wrapper '__getattribute__' of exceptions.SyntaxError object>"
+p49
+sS'print_file_and_line'
+p50
+S'None'
+p51
+sS'args'
+p52
+S'(\'invalid syntax\', (\'/home/wasuaje/Documentos/desarrollo/web2py6/applications/pysalon/controllers/pos.py\', 251, 51, \'\\t\\t\\t\\t\\t\\t  TR("FECHA:","",head.fc_factura.fecha)_style=algright), _style=estilotbl)))\\n\'))'
+p53
+sS'__subclasshook__'
+p54
+S'<built-in method __subclasshook__ of type object>'
+p55
+sS'offset'
+p56
+S'51'
+p57
+sS'__unicode__'
+p58
+S'<built-in method __unicode__ of exceptions.SyntaxError object>'
+p59
+sS'__delattr__'
+p60
+S"<method-wrapper '__delattr__' of exceptions.SyntaxError object>"
+p61
+sS'__repr__'
+p62
+S"<method-wrapper '__repr__' of exceptions.SyntaxError object>"
+p63
+sS'__hash__'
+p64
+S"<method-wrapper '__hash__' of exceptions.SyntaxError object>"
+p65
+ssS'evalue'
+p66
+S'invalid syntax (pos.py, line 251)'
+p67
+sS'request'
+p68
+cgluon.html
+XML_unpickle
+p69
+(S's\xa3d\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top;">ajax</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">application</td><td style="vertical-align:top;">:</td><td><div>pysalon</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cid</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">client</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">controller</td><td style="vertical-align:top;">:</td><td><div>pos</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cookies</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">caja_id</td><td style="vertical-align:top;">:</td><td><div>18<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_admin</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-fa0dc796-78de-482e-b0a3-acd5704a64f8<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_admotion</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-1ee0da6d-e357-43b0-9a7e-f24c9c14ed79<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_eupdf</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-bf272993-a3a5-444e-b7b6-748cfe6363e0<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_pysalon</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-4e9d6685-e596-4ce0-ab4c-f3a03db1cdd6<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">env</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT</td><td style="vertical-align:top;">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT_ENCODING</td><td style="vertical-align:top;">:</td><td><div>gzip, deflate</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT_LANGUAGE</td><td style="vertical-align:top;">:</td><td><div>es-MX,es-ES;q=0.8,es-AR;q=0.7,es;q=0.5,en-US;q=0.3,en;q=0.2</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_CACHE_CONTROL</td><td style="vertical-align:top;">:</td><td><div>max-age=0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_CONNECTION</td><td style="vertical-align:top;">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_COOKIE</td><td style="vertical-align:top;">:</td><td><div>caja_id=18; session_id_admin=127.0.0.1-fa0dc796-78de-482e-b0a3-acd5704a64f8; session_id_admotion=127.0.0.1-1ee0da6d-e357-43b0-9a7e-f24c9c14ed79; session_id_eupdf=127.0.0.1-bf272993-a3a5-444e-b7b6-748cfe6363e0; session_id_pysalon=127.0.0.1-4e9d6685-e596-4ce0-ab4c-f3a03db1cdd6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_HOST</td><td style="vertical-align:top;">:</td><td><div>localhost:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_USER_AGENT</td><td style="vertical-align:top;">:</td><td><div>Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:29.0) Gecko/20100101 Firefox/29.0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">PATH_INFO</td><td style="vertical-align:top;">:</td><td><div>/pysalon/pos/fact_print</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">QUERY_STRING</td><td style="vertical-align:top;">:</td><td><div>fact_id=94</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REMOTE_ADDR</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REMOTE_PORT</td><td style="vertical-align:top;">:</td><td><div>48861</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REQUEST_METHOD</td><td style="vertical-align:top;">:</td><td><div>GET</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SCRIPT_NAME</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_NAME</td><td style="vertical-align:top;">:</td><td><div>wasuaje-desktop</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_PORT</td><td style="vertical-align:top;">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_PROTOCOL</td><td style="vertical-align:top;">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_SOFTWARE</td><td style="vertical-align:top;">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">app_folders</td><td style="vertical-align:top;">:</td><td><div>set([&#x27;/home/wasuaje/Documentos/desarrollo/web2py6/applications/admin/&#x27;, &#x27;/home/wasuaje/Documentos/desarrollo/web2py6/applications/pysalon/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">applications_parent</td><td style="vertical-align:top;">:</td><td><div>/home/wasuaje/Documentos/desarrollo/web2py6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_options</td><td style="vertical-align:top;">:</td><td><div>&lt;Values at 0x90adc4c: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;with_scheduler&#x27;: False, &#x27;ips&#x27;: [&#x27;10.1.125.41&#x27;, &#x27;127.0.1.1&#x27;], &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;port&#x27;: 8000, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;wasuaje-desktop&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;/home/wasuaje/Documentos/desarrollo/web2py6&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;profiler_dir&#x27;: None, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;interfaces&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;scheduler_groups&#x27;: None, &#x27;password&#x27;: &#x27;w&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">db_sessions</td><td style="vertical-align:top;">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">debugging</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">gluon_parent</td><td style="vertical-align:top;">:</td><td><div>/home/wasuaje/Documentos/desarrollo/web2py6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept</td><td style="vertical-align:top;">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept_encoding</td><td style="vertical-align:top;">:</td><td><div>gzip, deflate</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept_language</td><td style="vertical-align:top;">:</td><td><div>es-MX,es-ES;q=0.8,es-AR;q=0.7,es;q=0.5,en-US;q=0.3,en;q=0.2</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_cache_control</td><td style="vertical-align:top;">:</td><td><div>max-age=0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_connection</td><td style="vertical-align:top;">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_cookie</td><td style="vertical-align:top;">:</td><td><div>caja_id=18; session_id_admin=127.0.0.1-fa0dc796-78de-482e-b0a3-acd5704a64f8; session_id_admotion=127.0.0.1-1ee0da6d-e357-43b0-9a7e-f24c9c14ed79; session_id_eupdf=127.0.0.1-bf272993-a3a5-444e-b7b6-748cfe6363e0; session_id_pysalon=127.0.0.1-4e9d6685-e596-4ce0-ab4c-f3a03db1cdd6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_host</td><td style="vertical-align:top;">:</td><td><div>localhost:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_user_agent</td><td style="vertical-align:top;">:</td><td><div>Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:29.0) Gecko/20100101 Firefox/29.0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_jython</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_pypy</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_source</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">local_hosts</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>wasuaje-desktop</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>10.1.125.41</div></td></tr><tr><td><div>127.0.1.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path_info</td><td style="vertical-align:top;">:</td><td><div>/pysalon/pos/fact_print</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">query_string</td><td style="vertical-align:top;">:</td><td><div>fact_id=94</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">remote_addr</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">remote_port</td><td style="vertical-align:top;">:</td><td><div>48861</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">request_method</td><td style="vertical-align:top;">:</td><td><div>GET</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">request_uri</td><td style="vertical-align:top;">:</td><td><div>/pysalon/pos/fact_print?fact_id=94</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">script_name</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_name</td><td style="vertical-align:top;">:</td><td><div>wasuaje-desktop</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_port</td><td style="vertical-align:top;">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_protocol</td><td style="vertical-align:top;">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_software</td><td style="vertical-align:top;">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_path</td><td style="vertical-align:top;">:</td><td><div>/home/wasuaje/Documentos/desarrollo/web2py6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_version</td><td style="vertical-align:top;">:</td><td><div>2.9.5-stable+timestamp.2014.03.16.02.35.39</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.errors</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0xb74a50d0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.file_wrapper</td><td style="vertical-align:top;">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0x906ca1c&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.input</td><td style="vertical-align:top;">:</td><td><div>&lt;socket._fileobject object at 0xadb7466c&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.multiprocess</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.multithread</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.run_once</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.url_scheme</td><td style="vertical-align:top;">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.version</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>0</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_errors</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0xb74a50d0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_file_wrapper</td><td style="vertical-align:top;">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0x906ca1c&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_input</td><td style="vertical-align:top;">:</td><td><div>&lt;socket._fileobject object at 0xadb7466c&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_multiprocess</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_multithread</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_run_once</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_url_scheme</td><td style="vertical-align:top;">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_version</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>0</div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">extension</td><td style="vertical-align:top;">:</td><td><div>html</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">folder</td><td style="vertical-align:top;">:</td><td><div>/home/wasuaje/Documentos/desarrollo/web2py6/applications/pysalon/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">function</td><td style="vertical-align:top;">:</td><td><div>fact_print</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">global_settings</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">app_folders</td><td style="vertical-align:top;">:</td><td><div>set([&#x27;/home/wasuaje/Documentos/desarrollo/web2py6/applications/admin/&#x27;, &#x27;/home/wasuaje/Documentos/desarrollo/web2py6/applications/pysalon/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">applications_parent</td><td style="vertical-align:top;">:</td><td><div>/home/wasuaje/Documentos/desarrollo/web2py6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_options</td><td style="vertical-align:top;">:</td><td><div>&lt;Values at 0x90adc4c: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;with_scheduler&#x27;: False, &#x27;ips&#x27;: [&#x27;10.1.125.41&#x27;, &#x27;127.0.1.1&#x27;], &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;port&#x27;: 8000, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;wasuaje-desktop&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;/home/wasuaje/Documentos/desarrollo/web2py6&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;profiler_dir&#x27;: None, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;interfaces&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;scheduler_groups&#x27;: None, &#x27;password&#x27;: &#x27;w&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">db_sessions</td><td style="vertical-align:top;">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">debugging</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">gluon_parent</td><td style="vertical-align:top;">:</td><td><div>/home/wasuaje/Documentos/desarrollo/web2py6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_jython</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_pypy</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_source</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">local_hosts</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>wasuaje-desktop</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>10.1.125.41</div></td></tr><tr><td><div>127.0.1.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_version</td><td style="vertical-align:top;">:</td><td><div>2.9.5-stable+timestamp.2014.03.16.02.35.39</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_https</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_local</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_restful</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">now</td><td style="vertical-align:top;">:</td><td><div>datetime.datetime(2014, 6, 5, 16, 36, 32, 567328)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">raw_args</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">raw_extension</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">url</td><td style="vertical-align:top;">:</td><td><div>/pysalon/pos/fact_print</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">utcnow</td><td style="vertical-align:top;">:</td><td><div>datetime.datetime(2014, 6, 5, 21, 6, 32, 567391)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">uuid</td><td style="vertical-align:top;">:</td><td><div>pysalon/127.0.0.1.2014-06-05.16-36-32.a7d6fe5a-375b-4a0e-8648-fcbc07590081</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi</td><td style="vertical-align:top;">:</td><td><div>&lt;gluon.main.LazyWSGI object at 0xada4468c&gt;</div></td></tr></table></div>'
+tRp70
+sS'frames'
+p71
+(lp72
+(dp73
+S'file'
+p74
+S'/home/wasuaje/Documentos/desarrollo/web2py6/gluon/restricted.py'
+p75
+sS'dump'
+p76
+(dp77
+S'code'
+p78
+S"'# -*- coding: utf-8 -*-\\n### required - do no del...er()\\nresponse._vars=response._caller(fact_print)\\n'"
+p79
+sS'layer'
+p80
+S"'/home/wasuaje/Documentos/desarrollo/web2py6/applications/pysalon/controllers/pos.py'"
+p81
+sS'global compile2'
+p82
+S'<function compile2>'
+p83
+sS'ccode'
+p84
+S'undefined'
+p85
+ssS'lnum'
+p86
+I219
+sS'lines'
+p87
+(dp88
+I214
+S"    environment['__name__'] = '__restricted__'"
+p89
+sI215
+S'    try:'
+p90
+sI216
+S'        if isinstance(code, types.CodeType):'
+p91
+sI217
+S'            ccode = code'
+p92
+sI218
+S'        else:'
+p93
+sI219
+S'            ccode = compile2(code, layer)'
+p94
+sI220
+S'        exec ccode in environment'
+p95
+sI221
+S'    except HTTP:'
+p96
+sI222
+S'        raise'
+p97
+sI223
+S'    except RestrictedError:'
+p98
+ssS'call'
+p99
+S"(code='# -*- coding: utf-8 -*-\\n### required - do no del...er()\\nresponse._vars=response._caller(fact_print)\\n', environment={'A': <class 'gluon.html.A'>, 'ANY_OF': <class 'gluon.validators.ANY_OF'>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, 'BUTTON': <class 'gluon.html.BUTTON'>, 'CAT': <class 'gluon.html.CAT'>, 'CENTER': <class 'gluon.html.CENTER'>, ...}, layer='/home/wasuaje/Documentos/desarrollo/web2py6/applications/pysalon/controllers/pos.py')"
+p100
+sS'func'
+p101
+S'restricted'
+p102
+sa(dp103
+g74
+S'/home/wasuaje/Documentos/desarrollo/web2py6/gluon/restricted.py'
+p104
+sg76
+(dp105
+S'builtincompile'
+p106
+S'<built-in function compile>'
+p107
+sS'code'
+p108
+S"'# -*- coding: utf-8 -*-\\n### required - do no del...er()\\nresponse._vars=response._caller(fact_print)\\n'"
+p109
+sS'code.rstrip'
+p110
+S'<built-in method rstrip of str object>'
+p111
+sS').replace'
+p112
+g85
+sS'layer'
+p113
+S"'/home/wasuaje/Documentos/desarrollo/web2py6/applications/pysalon/controllers/pos.py'"
+p114
+ssg86
+I202
+sg87
+(dp115
+I197
+S''
+sI198
+S'def compile2(code, layer):'
+p116
+sI199
+S'    """'
+p117
+sI200
+S"    The +'\\n' is necessary else compile fails when code ends in a comment."
+p118
+sI201
+S'    """'
+p119
+sI202
+S"    return compile(code.rstrip().replace('\\r\\n', '\\n') + '\\n', layer, 'exec')"
+p120
+sI203
+S''
+sI204
+S''
+sI205
+S"def restricted(code, environment=None, layer='Unknown'):"
+p121
+sI206
+S'    """'
+p122
+ssg99
+S"(code='# -*- coding: utf-8 -*-\\n### required - do no del...er()\\nresponse._vars=response._caller(fact_print)\\n', layer='/home/wasuaje/Documentos/desarrollo/web2py6/applications/pysalon/controllers/pos.py')"
+p123
+sg101
+S'compile2'
+p124
+sasS'pyver'
+p125
+S'Python 2.7.5+: /usr/bin/python (prefix: /usr)'
+p126
+sS'session'
+p127
+g69
+(S's\xe7\x08\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top;">auth</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">expiration</td><td style="vertical-align:top;">:</td><td><div>3600</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">hmac_key</td><td style="vertical-align:top;">:</td><td><div>1a4bccf7-2f63-47d4-aeb0-9280c9183fc6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">last_visit</td><td style="vertical-align:top;">:</td><td><div>datetime.datetime(2014, 6, 5, 16, 32, 31, 25608)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">remember</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">user</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">email</td><td style="vertical-align:top;">:</td><td><div>wasuaje@gmail.com</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">first_name</td><td style="vertical-align:top;">:</td><td><div>Wuelfhis</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">id</td><td style="vertical-align:top;">:</td><td><div>1L</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">last_name</td><td style="vertical-align:top;">:</td><td><div>Asuaje</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">registration_id</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">registration_key</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">reset_password_key</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">user_groups</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">1</td><td style="vertical-align:top;">:</td><td><div>user_1</div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">flash</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr></table></div>'
+tRp128
+sS'etype'
+p129
+S"<type 'exceptions.SyntaxError'>"
+p130
+sS'date'
+p131
+S'Thu Jun  5 16:36:32 2014'
+p132
+sS'response'
+p133
+g69
+(S's\x9c1\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top;">body</td><td style="vertical-align:top;">:</td><td><div>&lt;cStringIO.StringO object at 0xad64bea0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cookies</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">session_id_pysalon</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-4e9d6685-e596-4ce0-ab4c-f3a03db1cdd6<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div>/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">delimiters</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>{{</div></td></tr><tr><td><div>}}</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">files</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">flash</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">generic_patterns</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>*</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">google_analytics_id</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">headers</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">X-Powered-By</td><td style="vertical-align:top;">:</td><td><div>web2py</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">logo</td><td style="vertical-align:top;">:</td><td><div><a class="brand" href="http://www.web2py.com/"><b>web<span>2</span>py</b>&trade;&nbsp;</a></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">menu</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div><table><tr><td><div>Inicio</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/pysalon/default/index</div></td></tr><tr><td><div><table></table></div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div><span class="highlighted">web2py</span></div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://web2py.com</div></td></tr><tr><td><div><table><tr><td><div><table><tr><td><div>Mis Sitios</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/site</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Esta Aplicaci\xc3\xb3n</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/design/pysalon</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Controller&#x27;&gt;, False, &#x27;/admin/default/edit/pysalon/controllers/pos.py&#x27;), (&lt;lazyT &#x27;View&#x27;&gt;, False, &#x27;/admin/default/edit/pysalon/views/pos/fact_print.html&#x27;), (&lt;lazyT &#x27;Layout&#x27;&gt;, False, &#x27;/admin/default/edit/pysalon/views/layout.html&#x27;), (&lt;lazyT &#x27;Stylesheet&#x27;&gt;, False, &#x27;/admin/default/edit/pysalon/static/css/web2py.css&#x27;), (&lt;lazyT &#x27;DB Model&#x27;&gt;, False, &#x27;/admin/default/edit/pysalon/models/db.py&#x27;), (&lt;lazyT &#x27;Menu Model&#x27;&gt;, False, &#x27;/admin/default/edit/pysalon/models/menu.py&#x27;), (&lt;lazyT &#x27;Database&#x27;&gt;, False, &#x27;/pysalon/appadmin/index&#x27;), (&lt;lazyT &#x27;Errors&#x27;&gt;, False, &#x27;/admin/default/errors/pysalon&#x27;), (&lt;lazyT &#x27;About&#x27;&gt;, False, &#x27;/admin/default/about/pysalon&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>web2py.com</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Download&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/download&#x27;), (&lt;lazyT &#x27;Support&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/support&#x27;), (&lt;lazyT &#x27;Demo&#x27;&gt;, False, &#x27;http://web2py.com/demo_admin&#x27;), (&lt;lazyT &#x27;Quick Examples&#x27;&gt;, False, &#x27;http://web2py.com/examples/default/examples&#x27;), (&lt;lazyT &#x27;FAQ&#x27;&gt;, False, &#x27;http://web2py.com/AlterEgo&#x27;), (&lt;lazyT &#x27;Videos&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/videos/&#x27;), (&lt;lazyT &#x27;Free Applications&#x27;&gt;, False, &#x27;http://web2py.com/appliances&#x27;), (&lt;lazyT &#x27;Plugins&#x27;&gt;, False, &#x27;http://web2py.com/plugins&#x27;), (&lt;lazyT &#x27;Layouts&#x27;&gt;, False, &#x27;http://web2py.com/layouts&#x27;), (&lt;lazyT &#x27;Recipes&#x27;&gt;, False, &#x27;http://web2pyslices.com/&#x27;), (&lt;lazyT &#x27;Semantic&#x27;&gt;, False, &#x27;http://web2py.com/semantic&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Documentaci\xc3\xb3n</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Preface&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/00&#x27;), (&lt;lazyT &#x27;Introduction&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/01&#x27;), (&lt;lazyT &#x27;Python&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/02&#x27;), (&lt;lazyT &#x27;Overview&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/03&#x27;), (&lt;lazyT &#x27;The Core&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/04&#x27;), (&lt;lazyT &#x27;The Views&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/05&#x27;), (&lt;lazyT &#x27;Database&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/06&#x27;), (&lt;lazyT &#x27;Forms and Validators&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/07&#x27;), (&lt;lazyT &#x27;Email and SMS&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/08&#x27;), (&lt;lazyT &#x27;Access Control&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/09&#x27;), (&lt;lazyT &#x27;Services&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/10&#x27;), (&lt;lazyT &#x27;Ajax Recipes&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/11&#x27;), (&lt;lazyT &#x27;Components and Plugins&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/12&#x27;), (&lt;lazyT &#x27;Deployment Recipes&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/13&#x27;), (&lt;lazyT &#x27;Other Recipes&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/14&#x27;), (&lt;lazyT &#x27;Buy this book&#x27;&gt;, False, &#x27;http://stores.lulu.com/web2py&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Comunidad</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>None</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Groups&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/usergroups&#x27;), (&lt;lazyT &#x27;Twitter&#x27;&gt;, False, &#x27;http://twitter.com/web2py&#x27;), (&lt;lazyT &#x27;Live Chat&#x27;&gt;, False, &#x27;http://webchat.freenode.net/?channels=web2py&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Plugins</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>None</div></td></tr><tr><td><div>[(&#x27;plugin_wiki&#x27;, False, &#x27;http://web2py.com/examples/default/download&#x27;), (&lt;lazyT &#x27;Other Plugins&#x27;&gt;, False, &#x27;http://web2py.com/plugins&#x27;), (&lt;lazyT &#x27;Layout Plugins&#x27;&gt;, False, &#x27;http://web2py.com/layouts&#x27;)]</div></td></tr></table></div></td></tr></table></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">meta</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">author</td><td style="vertical-align:top;">:</td><td><div>Your Name &lt;you@example.com&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">generator</td><td style="vertical-align:top;">:</td><td><div>Web2py Web Framework</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">keywords</td><td style="vertical-align:top;">:</td><td><div>web2py, python, framework</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">models_to_run</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>^\\w+\\.py$</div></td></tr><tr><td><div>^pos/\\w+\\.py$</div></td></tr><tr><td><div>^pos/fact_print/\\w+\\.py$</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">postprocessing</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_client</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_compression_level</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_expires</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_key</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_data_name</td><td style="vertical-align:top;">:</td><td><div>session_data_pysalon</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_file</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;/home/wasuaje/Documentos/desarrollo/web2py6/applications/pysalon/sessions/127.0.0.1-4e9d6685-e596-4ce0-ab4c-f3a03db1cdd6&#x27;, mode &#x27;rb+&#x27; at 0xb3326a70&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_filename</td><td style="vertical-align:top;">:</td><td><div>/home/wasuaje/Documentos/desarrollo/web2py6/applications/pysalon/sessions/127.0.0.1-4e9d6685-e596-4ce0-ab4c-f3a03db1cdd6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_hash</td><td style="vertical-align:top;">:</td><td><div>6f7a388f97aae0d70c5ad068d4286a47</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-4e9d6685-e596-4ce0-ab4c-f3a03db1cdd6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_name</td><td style="vertical-align:top;">:</td><td><div>session_id_pysalon</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_locked</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_masterapp</td><td style="vertical-align:top;">:</td><td><div>pysalon</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_new</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_storage_type</td><td style="vertical-align:top;">:</td><td><div>file</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">status</td><td style="vertical-align:top;">:</td><td><div>200</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">subtitle</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">title</td><td style="vertical-align:top;">:</td><td><div>Pysalon</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">view</td><td style="vertical-align:top;">:</td><td><div>pos/fact_print.html</div></td></tr></table></div>'
+tRp134
+sS'locals'
+p135
+(dp136
+g4
+S"'/home/wasuaje/Documentos/desarrollo/web2py6/applications/pysalon/controllers/pos.py'"
+p137
+sg6
+S"'# -*- coding: utf-8 -*-\\n### required - do no del...er()\\nresponse._vars=response._caller(fact_print)\\n'"
+p138
+sssS'traceback'
+p139
+S'Traceback (most recent call last):\n  File "/home/wasuaje/Documentos/desarrollo/web2py6/gluon/restricted.py", line 219, in restricted\n    ccode = compile2(code, layer)\n  File "/home/wasuaje/Documentos/desarrollo/web2py6/gluon/restricted.py", line 202, in compile2\n    return compile(code.rstrip().replace(\'\\r\\n\', \'\\n\') + \'\\n\', layer, \'exec\')\n  File "/home/wasuaje/Documentos/desarrollo/web2py6/applications/pysalon/controllers/pos.py", line 251\n    TR("FECHA:","",head.fc_factura.fecha)_style=algright), _style=estilotbl)))\n                                              ^\nSyntaxError: invalid syntax\n'
+p140
+s.

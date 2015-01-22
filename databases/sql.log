@@ -1,0 +1,591 @@
+timestamp: 2014-04-30T16:37:42.818642
+CREATE TABLE auth_user(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    first_name CHAR(128),
+    last_name CHAR(128),
+    email CHAR(512),
+    password CHAR(512),
+    registration_key CHAR(512),
+    reset_password_key CHAR(512),
+    registration_id CHAR(512)
+);
+success!
+timestamp: 2014-04-30T16:37:42.959662
+CREATE TABLE auth_group(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    role CHAR(512),
+    description TEXT
+);
+success!
+timestamp: 2014-04-30T16:37:43.068445
+CREATE TABLE auth_membership(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES auth_user (id) ON DELETE CASCADE,
+    group_id INTEGER REFERENCES auth_group (id) ON DELETE CASCADE
+);
+success!
+timestamp: 2014-04-30T16:37:43.226721
+CREATE TABLE auth_permission(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    group_id INTEGER REFERENCES auth_group (id) ON DELETE CASCADE,
+    name CHAR(512),
+    table_name CHAR(512),
+    record_id INTEGER
+);
+success!
+timestamp: 2014-04-30T16:37:43.348698
+CREATE TABLE auth_event(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    time_stamp TIMESTAMP,
+    client_ip CHAR(512),
+    user_id INTEGER REFERENCES auth_user (id) ON DELETE CASCADE,
+    origin CHAR(512),
+    description TEXT
+);
+success!
+timestamp: 2014-04-30T16:37:43.479832
+CREATE TABLE auth_cas(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES auth_user (id) ON DELETE CASCADE,
+    created_on TIMESTAMP,
+    service CHAR(512),
+    ticket CHAR(512),
+    renew CHAR(1)
+);
+success!
+timestamp: 2014-05-07T12:10:48.710759
+CREATE TABLE cf_empresa(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre CHAR(512),
+    razon_social CHAR(512),
+    direccion TEXT,
+    rif CHAR(512),
+    nit CHAR(512),
+    email CHAR(512),
+    tlf CHAR(512),
+    fax CHAR(512),
+    ruta_foto CHAR(512)
+);
+success!
+timestamp: 2014-05-07T14:26:59.829147
+CREATE TABLE in_categoria(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo CHAR(512),
+    nombre CHAR(512),
+    show_in_menu CHAR(1),
+    ruta_foto CHAR(512)
+);
+success!
+timestamp: 2014-05-07T14:27:00.012796
+CREATE TABLE in_producto(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo CHAR(512),
+    nombre CHAR(512),
+    importe DOUBLE,
+    iva DOUBLE,
+    imp1 DOUBLE,
+    imp2 DOUBLE,
+    descuento DOUBLE,
+    costo DOUBLE,
+    show_in_menu CHAR(1),
+    ruta_foto CHAR(512),
+    categoria_id INTEGER
+);
+success!
+timestamp: 2014-05-09T10:48:40.624576
+ALTER TABLE in_producto ADD comision DOUBLE;
+success!
+timestamp: 2014-05-09T15:04:38.622174
+CREATE TABLE cf_proveedor(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre CHAR(512),
+    razon_social CHAR(512),
+    direccion TEXT,
+    rif CHAR(512),
+    nit CHAR(512),
+    email CHAR(512),
+    tlf CHAR(512),
+    fax CHAR(512),
+    ruta_foto CHAR(512)
+);
+success!
+timestamp: 2014-05-09T15:04:38.874417
+CREATE TABLE cf_cliente(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre CHAR(512),
+    razon_social CHAR(512),
+    direccion TEXT,
+    rif CHAR(512),
+    nit CHAR(512),
+    email CHAR(512),
+    tlf CHAR(512),
+    fax CHAR(512),
+    juridico CHAR(1),
+    ruta_foto CHAR(512)
+);
+success!
+timestamp: 2014-05-09T15:26:00.869829
+CREATE TABLE cf_especialidad(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo CHAR(512),
+    nombre CHAR(512)
+);
+success!
+timestamp: 2014-05-09T16:09:37.855974
+CREATE TABLE cf_persona(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cedula CHAR(512) UNIQUE,
+    nombres CHAR(512),
+    apellidos CHAR(512),
+    ruta_foto CHAR(512),
+    sexo CHAR(512),
+    usuario CHAR(512),
+    password CHAR(512),
+    especialidad_id INTEGER,
+    tlf_hab CHAR(512),
+    tlf_cel CHAR(512),
+    direccion CHAR(512),
+    email CHAR(512)
+);
+success!
+timestamp: 2014-05-12T15:22:30.938019
+CREATE TABLE cf_caja(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo CHAR(512),
+    nombre CHAR(512)
+);
+success!
+timestamp: 2014-05-12T15:22:31.171919
+CREATE TABLE cf_caja_concepto(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo CHAR(512),
+    nombre CHAR(512),
+    tipo CHAR(512)
+);
+success!
+timestamp: 2014-05-12T15:23:47.146258
+CREATE TABLE mv_caja(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha DATE,
+    apertura TIMESTAMP,
+    cierre TIMESTAMP,
+    descripcion CHAR(512),
+    caja_id INTEGER,
+    usuario_id INTEGER
+);
+success!
+timestamp: 2014-05-12T15:23:47.302828
+CREATE TABLE mv_caja_det(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TIMESTAMP,
+    caja_concepto_id INTEGER,
+    descripcion CHAR(512),
+    monto DOUBLE
+);
+success!
+timestamp: 2014-05-12T16:04:25.470126
+ALTER TABLE mv_caja_det ADD salida DOUBLE;
+timestamp: 2014-05-12T16:04:26.007794
+ALTER TABLE mv_caja_det ADD concepto CHAR(512);
+timestamp: 2014-05-12T16:04:26.371878
+ALTER TABLE mv_caja_det ADD mv_caja_id INTEGER;
+timestamp: 2014-05-12T16:04:26.611433
+ALTER TABLE mv_caja_det ADD entrada DOUBLE;
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+timestamp: 2014-05-12T17:25:08.118944
+ALTER TABLE mv_caja ADD monto_apertura DOUBLE;
+timestamp: 2014-05-12T17:25:08.297722
+ALTER TABLE mv_caja ADD monto_cierre DOUBLE;
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+timestamp: 2014-05-13T14:03:06.916893
+CREATE TABLE mv_caja(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha DATE,
+    apertura TIMESTAMP,
+    cierre TIMESTAMP,
+    descripcion CHAR(512),
+    monto_apertura DOUBLE,
+    monto_cierre DOUBLE,
+    caja_id INTEGER,
+    usuario_id INTEGER
+);
+success!
+timestamp: 2014-05-13T14:03:07.193730
+CREATE TABLE mv_caja_det(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TIMESTAMP,
+    concepto CHAR(512),
+    entrada DOUBLE,
+    salida DOUBLE,
+    mv_caja_id INTEGER
+);
+success!
+success!
+timestamp: 2014-05-15T12:47:54.553042
+ALTER TABLE mv_caja_det ADD usuario_id INTEGER;
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+timestamp: 2014-05-15T13:22:01.920915
+CREATE TABLE mv_caja(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha DATE,
+    apertura TIMESTAMP,
+    cierre TIMESTAMP,
+    descripcion CHAR(512),
+    monto_apertura DOUBLE,
+    monto_cierre DOUBLE,
+    usuario_id INTEGER
+);
+success!
+timestamp: 2014-05-15T13:22:02.180053
+CREATE TABLE mv_caja_det(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TIMESTAMP,
+    concepto CHAR(512),
+    entrada DOUBLE,
+    salida DOUBLE,
+    mv_caja_id INTEGER,
+    usuario_id INTEGER
+);
+success!
+timestamp: 2014-05-19T15:09:07.610200
+ALTER TABLE in_producto ADD inventario CHAR(512);
+success!
+timestamp: 2014-05-19T15:09:07.950577
+CREATE TABLE in_mov(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TIMESTAMP,
+    tipo CHAR(512),
+    documento CHAR(512),
+    descripcion CHAR(512),
+    entrada INTEGER,
+    costo DOUBLE,
+    salida INTEGER,
+    precio DOUBLE,
+    producto_id INTEGER,
+    usuario_id INTEGER
+);
+success!
+timestamp: 2014-05-19T15:09:08.370858
+CREATE TABLE fc_factura(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo INTEGER,
+    fecha TIMESTAMP,
+    nota CHAR(512),
+    referencia CHAR(512),
+    descuento DOUBLE,
+    recargo DOUBLE,
+    estado INTEGER,
+    cliente_id INTEGER
+);
+success!
+timestamp: 2014-05-19T15:09:08.574532
+CREATE TABLE fc_factura_det(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    descripcion CHAR(512),
+    cantidad DOUBLE,
+    importe DOUBLE,
+    impuesto DOUBLE,
+    total DOUBLE,
+    factura_id INTEGER,
+    producto_id INTEGER
+);
+success!
+timestamp: 2014-05-19T15:09:08.741203
+CREATE TABLE fc_forma_pago(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo CHAR(512),
+    nombre CHAR(512)
+);
+success!
+timestamp: 2014-05-19T15:09:08.867046
+CREATE TABLE fc_cobro_det(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TIMESTAMP,
+    referencia CHAR(512),
+    monto DOUBLE,
+    descripcion CHAR(512),
+    forma_pago_id INTEGER,
+    factura_id INTEGER
+);
+success!
+timestamp: 2014-05-21T10:24:22.100124
+CREATE TABLE in_mov(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha DATE,
+    registro TIMESTAMP,
+    tipo CHAR(512),
+    documento CHAR(512),
+    descripcion CHAR(512),
+    entrada INTEGER,
+    costo DOUBLE,
+    salida INTEGER,
+    precio DOUBLE,
+    producto_id INTEGER,
+    usuario_id INTEGER
+);
+timestamp: 2014-05-21T10:25:27.818578
+CREATE TABLE in_mov(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha DATE,
+    registro TIMESTAMP,
+    tipo CHAR(512),
+    documento CHAR(512),
+    descripcion CHAR(512),
+    entrada INTEGER,
+    costo DOUBLE,
+    salida INTEGER,
+    precio DOUBLE,
+    producto_id INTEGER,
+    usuario_id INTEGER
+);
+success!
+success!
+timestamp: 2014-05-23T12:43:03.648356
+ALTER TABLE fc_factura_det ADD persona_id INTEGER;
+success!
+timestamp: 2014-05-23T12:44:27.455282
+CREATE TABLE fc_factura(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo CHAR(512),
+    fecha TIMESTAMP,
+    nota CHAR(512),
+    referencia CHAR(512),
+    descuento DOUBLE,
+    recargo DOUBLE,
+    estado INTEGER,
+    cliente_id INTEGER
+);
+success!
+timestamp: 2014-05-23T12:44:27.710285
+CREATE TABLE fc_factura_det(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    descripcion CHAR(512),
+    cantidad DOUBLE,
+    importe DOUBLE,
+    impuesto DOUBLE,
+    total DOUBLE,
+    factura_id INTEGER,
+    producto_id INTEGER,
+    persona_id INTEGER
+);
+success!
+timestamp: 2014-05-29T16:41:13.922887
+CREATE TABLE cf_persona(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cedula CHAR(512) UNIQUE,
+    nombres CHAR(512),
+    apellidos CHAR(512),
+    ruta_foto CHAR(512),
+    sexo CHAR(512),
+    usuario CHAR(512),
+    password CHAR(512),
+    especialidad_id INTEGER,
+    tlf_hab CHAR(512),
+    tlf_cel CHAR(512),
+    direccion CHAR(512),
+    comision DOUBLE,
+    email CHAR(512)
+);
+success!
+timestamp: 2014-05-29T16:41:15.852711
+CREATE TABLE fc_factura(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo CHAR(512),
+    fecha DATE,
+    nota CHAR(512),
+    referencia CHAR(512),
+    descuento DOUBLE,
+    recargo DOUBLE,
+    estado INTEGER,
+    cliente_id INTEGER,
+    usuario_id INTEGER
+);
+success!
+timestamp: 2014-05-29T16:41:16.038777
+CREATE TABLE fc_factura_det(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    descripcion CHAR(512),
+    cantidad INTEGER,
+    importe DOUBLE,
+    impuesto DOUBLE,
+    total DOUBLE,
+    comision DOUBLE,
+    factura_id INTEGER,
+    producto_id INTEGER,
+    persona_id INTEGER
+);
+success!
+timestamp: 2014-06-03T16:47:38.834340
+ALTER TABLE fc_cobro_det ADD registro TIMESTAMP;
+timestamp: 2014-06-03T16:48:45.675907
+CREATE TABLE fc_cobro_det(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha DATE,
+    registro TIMESTAMP,
+    referencia CHAR(512),
+    monto DOUBLE,
+    descripcion CHAR(512),
+    forma_pago_id INTEGER,
+    factura_id INTEGER,
+    usuario_id INTEGER
+);
+success!
+timestamp: 2014-06-05T17:26:31.728831
+ALTER TABLE fc_factura ADD iva DOUBLE;
+success!

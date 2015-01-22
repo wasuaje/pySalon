@@ -1,0 +1,57 @@
+
+{{extend 'index.html'}}
+
+<h1>Empresa</h1>
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <i class="fa fa-bar-chart-o fa-fw"></i> Inicio
+        <div class="pull-right">
+            <div class="btn-group">
+                <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                    Actions
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu pull-right" role="menu">  
+                	{{if myform.record:}}
+                      <li><a href="{{=URL('empresa','eliminar',vars=dict(id=myform.record.id))}}">Eliminar</a> </li>
+                    {{pass}}
+                                        
+                </ul>
+            </div>
+        </div>
+    </div>                        
+     <!-- /.panel-heading -->
+    <div class="panel-body">
+        {{=myform}}
+        
+        <div id="response">
+          <div class="alert alert-success alert-dismissable" style="display:none" id="notify-success">                        
+             </div> 
+             <div class="alert alert-warning alert-dismissable" style="display:none" id="notify-warning">
+             </div> 
+            <div class="alert alert-danger alert-dismissable" style="display:none" id="notify-danger">                         
+             </div>             
+            
+             {{if exito==str(1):}}               
+               <script>
+               $('#notify-success').html({{=msg}});
+               $('#notify-success').show();            
+               $('#notify-success').delay(3000).fadeOut('slow');
+               </script>             
+             {{elif exito==str(0):}}
+               <script>
+               $('#notify-danger').html({{=msg}});
+               $('#notify-danger').show();            
+               $('#notify-danger').delay(3000).fadeOut('slow');
+               </script>
+            {{pass}}
+        </div>
+    <!-- /.panel-body -->
+    </div>
+  </div>
+
+
+
+<script>
+
+</script>
