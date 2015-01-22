@@ -1,11 +1,14 @@
 =======
-Pycitas
+PySalon
 =======
 
-.. image:: pysalon1.png
+.. image:: pysalon2.png
 
 Es un proyecto WEB2py (Python) para manejo de peluquerias y salones de belleza con estilo `Bootstrap3 <http://http://getbootstrap.com/>`_. Para verlo en funcionamiento pueden
 ir a `PySalon <http://http://wasuaje.pythonanywhere.com/pysalon>`_. Pruebe registrandose si tiene algun problema envieme un email.
+
+
+.. image:: pysalon1.png
 
 
 Requiere:
