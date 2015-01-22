@@ -1,12 +1,11 @@
 =======
 Pycitas
 =======
+
 .. image:: pysalon1.png
 
-Es un proyecto WEB2py (Python) para manejo de peluquerias y salones de belleza con estilo 
-bootstrap3 `AppointmentManager <http://http://getbootstrap.com/>`_. Para verlo en funcionamiento pueden
-ir a `PySalon <http://http://wasuaje.pythonanywhere.com/pysalon>`_. Pruebe registrandose si tiene algun problema
-envieme un email
+Es un proyecto WEB2py (Python) para manejo de peluquerias y salones de belleza con estilo `Bootstrap3 <http://http://getbootstrap.com/>`_. Para verlo en funcionamiento pueden
+ir a `PySalon <http://http://wasuaje.pythonanywhere.com/pysalon>`_. Pruebe registrandose si tiene algun problema envieme un email.
 
 
 Requiere:
@@ -30,6 +29,7 @@ Instalacion:
 
 Punto de Venta:
 -----------------
+
 .. image:: pysalon.png
 
 ::
